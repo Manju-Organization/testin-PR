@@ -1,0 +1,77 @@
+name: List All Branches by Status in Organization
+
+on:
+  workflow_dispatch:
+
+jobs:
+  list-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up environment variables
+        env:
+          ORG: Manju-Organization # Replace with your organization name
+          TOKEN: ${{ secrets.TOKEN }}
+          OUTPUT_FILE: branches_list.csv
+          DAYS_STALE: 90  # Number of days to consider a branch stale
+        run: |
+          # Initialize CSV file
+          echo "Repository,Branch,Last Commit Date,Status" > $OUTPUT_FILE
+
+          # Set pagination variables
+          REPO_PAGE=1
+          REPO_PER_PAGE=100
+
+          # Fetch repositories in the organization
+          while :; do
+            REPOS=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$ORG/repos?per_page=$REPO_PER_PAGE&page=$REPO_PAGE" | grep '"name"' | cut -d '"' -f 4)
+
+            # Break if no more repositories are found
+            [ -z "$REPOS" ] && break
+
+            # Process each repository
+            for REPO in $REPOS; do
+              echo "Processing repository: $REPO"
+
+              # Set branch pagination variables
+              BRANCH_PAGE=1
+              BRANCH_PER_PAGE=100
+
+              # Fetch branches for each repository
+              while :; do
+                BRANCHES=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
+
+                # Break if no more branches are found
+                [ "$(echo "$BRANCHES" | wc -c)" -le 5 ] && break
+
+                # Process each branch
+                echo "$BRANCHES" | grep '"name"' | cut -d '"' -f 4 | while read -r BRANCH_NAME; do
+                  LAST_COMMIT_DATE=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/commits/$BRANCH_NAME" | grep '"date"' | head -n 1 | cut -d '"' -f 4)
+                  LAST_COMMIT_SECONDS=$(date -d "$LAST_COMMIT_DATE" +%s)
+                  TODAY=$(date +%s)
+                  DIFF_DAYS=$(( (TODAY - LAST_COMMIT_SECONDS) / 86400 ))
+
+                  # Determine if the branch is stale or active
+                  if [ $DIFF_DAYS -ge $DAYS_STALE ]; then
+                    STATUS="Stale"
+                  else
+                    STATUS="Active"
+                  fi
+
+                  # Add entry to CSV
+                  echo "$REPO,$BRANCH_NAME,$LAST_COMMIT_DATE,$STATUS" >> $OUTPUT_FILE
+                done
+
+                # Increment branch page for the next batch
+                BRANCH_PAGE=$((BRANCH_PAGE + 1))
+              done
+            done
+
+            # Increment repo page for the next batch
+            REPO_PAGE=$((REPO_PAGE + 1))
+          done
+
+      - name: Upload CSV file
+        uses: actions/upload-artifact@v3
+        with:
+          name: branches_list.csv
+          path: branches_list.csv
