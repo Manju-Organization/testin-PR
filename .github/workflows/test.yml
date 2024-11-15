@@ -1,7 +1,12 @@
-name: List All Branches with Existing Status in Organization
+name: List Branches in Repository
 
 on:
   workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository name'
+        required: true
+        default: 'test-repo'  # Replace with the desired repository name
 
 jobs:
   list-branches:
@@ -9,61 +14,45 @@ jobs:
     steps:
       - name: Set up environment variables
         env:
-          ORG: Manju-Organization  # Replace with your organization name
-          TOKEN: ${{ secrets.TOKEN }}
-          OUTPUT_FILE: branches_list.csv
+          ORG: Manju-Organization  # Replace with your GitHub organization name
+          REPO: ${{ github.event.inputs.repository }}  # Takes the repository name as input
+          TOKEN: ${{ secrets.TOKEN }}  # GitHub token for authentication
+          OUTPUT_FILE: branches_list.csv  # Output CSV file name
         run: |
-          # Initialize CSV file
-          echo "Repository,Branch,Status" > $OUTPUT_FILE
-          
-          # Set pagination variables for repositories
-          REPO_PAGE=1
-          REPO_PER_PAGE=100
+          # Initialize CSV file with headers
+          echo "Branch,Last Commit Date" > $OUTPUT_FILE
 
-          # Loop through each page of repositories
+          # Set pagination variables
+          BRANCH_PAGE=1
+          BRANCH_PER_PAGE=100
+
+          # Fetch branches for the specified repository
           while :; do
-            # Fetch repositories in the organization
-            REPOS=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/orgs/$ORG/repos?per_page=$REPO_PER_PAGE&page=$REPO_PAGE" | grep '"name"' | cut -d '"' -f 4)
-            
-            # Break if no more repositories are found
-            [ -z "$REPOS" ] && break
-            
-            # Process each repository
-            for REPO in $REPOS; do
-              echo "Processing repository: $REPO"
-              
-              # Set branch pagination variables
-              BRANCH_PAGE=1
-              BRANCH_PER_PAGE=100
+            BRANCHES=$(curl -s -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
 
-              # Loop through each page of branches for the repository
-              while :; do
-                # Fetch branches for each repository with their status if available
-                BRANCHES=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
-                
-                # Break if no more branches are found
-                [ "$(echo "$BRANCHES" | wc -c)" -le 5 ] && break
-                
-                # Process each branch
-                echo "$BRANCHES" | grep '"name"' | cut -d '"' -f 4 | while read -r BRANCH_NAME; do
-                  # Fetch the existing branch status
-                  # Assuming an endpoint or custom logic to retrieve status here
-                  STATUS=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/branches/$BRANCH_NAME" | jq -r '.status')
+            # Break if no more branches are found
+            [ "$(echo "$BRANCHES" | wc -c)" -le 5 ] && break
 
-                  # If no status is found, mark it as "Unknown"
-                  STATUS=${STATUS:-"Unknown"}
+            # Process each branch
+            echo "$BRANCHES" | grep '"name"' | cut -d '"' -f 4 | while read -r BRANCH_NAME; do
+              # Fetch the last commit date for the branch
+              COMMIT_DETAILS=$(curl -s -L \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/$ORG/$REPO/commits?sha=$BRANCH_NAME&per_page=1")
+              LAST_COMMIT_DATE=$(echo "$COMMIT_DETAILS" | grep '"date"' | head -n 1 | cut -d '"' -f 4)
 
-                  # Append entry to CSV file
-                  echo "$REPO,$BRANCH_NAME,$STATUS" >> $OUTPUT_FILE
-                done
-
-                # Increment branch page for the next batch
-                BRANCH_PAGE=$((BRANCH_PAGE + 1))
-              done
+              # Add branch name and last commit date to the CSV file
+              echo "$BRANCH_NAME,$LAST_COMMIT_DATE" >> $OUTPUT_FILE
             done
 
-            # Increment repository page for the next batch
-            REPO_PAGE=$((REPO_PAGE + 1))
+            # Increment the page for the next batch of branches
+            BRANCH_PAGE=$((BRANCH_PAGE + 1))
           done
 
       - name: Upload CSV file
