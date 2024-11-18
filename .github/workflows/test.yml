@@ -1,60 +1,61 @@
-name: List Branches in Repository
-
+name: List All Branches by Status for a Specific Repository
+ 
 on:
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository name'
+        description: 'Repository name within the organization'
         required: true
-        default: 'test-repo'  # Replace with the desired repository name
-
+        default: 'testin-PR'  # Replace with the name of the specific repository
+ 
 jobs:
   list-branches:
     runs-on: ubuntu-latest
     steps:
       - name: Set up environment variables
         env:
-          ORG: Manju-Organization  # Replace with your GitHub organization name
-          REPO: ${{ github.event.inputs.repository }}  # Takes the repository name as input
-          TOKEN: ${{ secrets.TOKEN }}  # GitHub token for authentication
-          OUTPUT_FILE: branches_list.csv  # Output CSV file name
+          ORG: Manju-Organization  # Replace with your organization name
+          REPO: ${{ github.event.inputs.repository }}
+          TOKEN: ${{ secrets.TOKEN }}
+          OUTPUT_FILE: branches_list.csv
+          DAYS_STALE: 90  # Number of days to consider a branch stale
         run: |
-          # Initialize CSV file with headers
-          echo "Branch,Last Commit Date" > $OUTPUT_FILE
-
-          # Set pagination variables
+          # Initialize CSV file
+          echo "Repository,Branch,Last Commit Date,Status" > $OUTPUT_FILE
+ 
+          # Set branch pagination variables
           BRANCH_PAGE=1
           BRANCH_PER_PAGE=100
-
+ 
           # Fetch branches for the specified repository
           while :; do
-            BRANCHES=$(curl -s -L \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
-
+            BRANCHES=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
+ 
             # Break if no more branches are found
             [ "$(echo "$BRANCHES" | wc -c)" -le 5 ] && break
-
+ 
             # Process each branch
             echo "$BRANCHES" | grep '"name"' | cut -d '"' -f 4 | while read -r BRANCH_NAME; do
-              # Fetch the last commit date for the branch
-              COMMIT_DETAILS=$(curl -s -L \
-                -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer $TOKEN" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/repos/$ORG/$REPO/commits?sha=$BRANCH_NAME&per_page=1")
-              LAST_COMMIT_DATE=$(echo "$COMMIT_DETAILS" | grep '"date"' | head -n 1 | cut -d '"' -f 4)
-
-              # Add branch name and last commit date to the CSV file
-              echo "$BRANCH_NAME,$LAST_COMMIT_DATE" >> $OUTPUT_FILE
+              LAST_COMMIT_DATE=$(curl -s -H "Authorization: token $TOKEN" "https://api.github.com/repos/$ORG/$REPO/commits/$BRANCH_NAME" | grep '"date"' | head -n 1 | cut -d '"' -f 4)
+              LAST_COMMIT_SECONDS=$(date -d "$LAST_COMMIT_DATE" +%s)
+              TODAY=$(date +%s)
+              DIFF_DAYS=$(( (TODAY - LAST_COMMIT_SECONDS) / 86400 ))
+ 
+              # Determine if the branch is stale or active
+              if [ $DIFF_DAYS -ge $DAYS_STALE ]; then
+                STATUS="Stale"
+              else
+                STATUS="Active"
+              fi
+ 
+              # Add entry to CSV
+              echo "$REPO,$BRANCH_NAME,$LAST_COMMIT_DATE,$STATUS" >> $OUTPUT_FILE
             done
-
-            # Increment the page for the next batch of branches
+ 
+            # Increment branch page for the next batch
             BRANCH_PAGE=$((BRANCH_PAGE + 1))
           done
-
+ 
       - name: Upload CSV file
         uses: actions/upload-artifact@v3
         with:
