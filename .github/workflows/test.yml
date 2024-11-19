@@ -19,7 +19,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           APP_ID: ${{ secrets.APP_ID }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
           OUTPUT_FILE: branches_list.csv
           DAYS_STALE: 90  # Number of days to consider a branch stale
         run: |
