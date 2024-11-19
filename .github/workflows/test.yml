@@ -12,7 +12,12 @@ jobs:
   list-branches:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up environment variables
+      - name: Set up environment and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq openssl
+
+      - name: List all branches
         env:
           ORG: Manju-Organization  # Replace with your organization name
           REPO: ${{ github.event.inputs.repository }}
@@ -23,25 +28,31 @@ jobs:
           OUTPUT_FILE: branches_list.csv
           DAYS_STALE: 90  # Number of days to consider a branch stale
         run: |
-          # Install dependencies for generating JWT and authenticating
-          sudo apt-get update
-          sudo apt-get install -y jq openssl
-
           # Generate JWT for GitHub App
           IAT=$(date +%s)
           EXP=$((IAT + 600))  # Token valid for 10 minutes
           HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
           PAYLOAD=$(echo -n "{\"iat\":$IAT,\"exp\":$EXP,\"iss\":$APP_ID}" | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
-          SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(echo -n "$PRIVATE_KEY") -binary | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
+          SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(printf '%s' "$PRIVATE_KEY") -binary | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
           JWT="$HEADER.$PAYLOAD.$SIGNATURE"
 
           # Authenticate as GitHub App and get installation ID
           INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/orgs/$ORG/installations" | jq -r '.installations[0].id')
 
+          if [ -z "$INSTALLATION_ID" ] || [ "$INSTALLATION_ID" == "null" ]; then
+            echo "Error: Unable to fetch installation ID for organization $ORG"
+            exit 1
+          fi
+
           # Generate installation access token
           INSTALLATION_TOKEN=$(curl -s -X POST -H "Authorization: Bearer $JWT" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r '.token')
+
+          if [ -z "$INSTALLATION_TOKEN" ] || [ "$INSTALLATION_TOKEN" == "null" ]; then
+            echo "Error: Unable to fetch installation token for installation ID $INSTALLATION_ID"
+            exit 1
+          fi
 
           # Initialize CSV file
           echo "Repository,Branch,Last Commit Date,Status" > $OUTPUT_FILE
@@ -56,12 +67,18 @@ jobs:
               "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
 
             # Break if no more branches are found
-            [ "$(echo "$BRANCHES" | wc -c)" -le 5 ] && break
+            [ "$(echo "$BRANCHES" | jq '. | length')" -eq 0 ] && break
 
             # Process each branch
-            echo "$BRANCHES" | grep '"name"' | cut -d '"' -f 4 | while read -r BRANCH_NAME; do
+            echo "$BRANCHES" | jq -r '.[].name' | while read -r BRANCH_NAME; do
               LAST_COMMIT_DATE=$(curl -s -H "Authorization: token $INSTALLATION_TOKEN" \
                 "https://api.github.com/repos/$ORG/$REPO/commits/$BRANCH_NAME" | jq -r '.commit.committer.date')
+
+              if [ -z "$LAST_COMMIT_DATE" ] || [ "$LAST_COMMIT_DATE" == "null" ]; then
+                echo "Error fetching commit details for branch $BRANCH_NAME"
+                continue
+              fi
+
               LAST_COMMIT_SECONDS=$(date -d "$LAST_COMMIT_DATE" +%s)
               TODAY=$(date +%s)
               DIFF_DAYS=$(( (TODAY - LAST_COMMIT_SECONDS) / 86400 ))
