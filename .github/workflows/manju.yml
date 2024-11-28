@@ -17,6 +17,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
 
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.inputs.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: List all branches
         env:
           ORG: Manju-Organization  # Replace with your organization name
