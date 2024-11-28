@@ -1,0 +1,65 @@
+Summary,As a,I Wish to,So that,Acceptance Criteria,Assumptions,Priority,Reporter,Epic Link,Issue type,Start Date,Due Date
+Determine project scope,Project Manager,None,None,None,None,Low,,SAP-154,Story,03-21-2024,03-21-2024
+Secure project sponsorship,Project Manager,None,None,None,None,Low,,SAP-154,Story,03-21-2024,03-22-2024
+Define preliminary resources,Project Manager,None,None,None,None,Low,,SAP-154,Story,03-22-2024,03-25-2024
+Secure core resources,Project Manager,None,None,None,None,Low,,SAP-154,Story,03-25-2024,03-26-2024
+Conduct needs analysis,Project Manager,None,None,None,None,Low,,SAP-154,Story,03-26-2024,04-02-2024
+Draft preliminary software specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-02-2024,04-05-2024
+Develop preliminary budget,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-05-2024,04-09-2024
+Review software specifications/budget with team,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-09-2024,04-09-2024
+Incorporate feedback on software specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-10-2024,04-10-2024
+Develop delivery timeline,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-11-2024,04-11-2024
+"Obtain approvals to proceed (concept, timeline, budget)",Project Manager,None,None,None,None,Low,,SAP-154,Story,04-12-2024,04-12-2024
+Secure required resources,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-12-2024,04-15-2024
+Review preliminary software specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-15-2024,04-17-2024
+Develop functional specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-17-2024,04-24-2024
+Develop prototype based on functional specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-24-2024,04-30-2024
+Review functional specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-30-2024,05-02-2024
+Incorporate feedback into functional specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-02-2024,05-03-2024
+Obtain approval to proceed,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-03-2024,05-03-2024
+Review functional specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-06-2024
+Identify modular/tiered design parameters,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-07-2024,05-07-2024
+Assign development staff,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-08-2024,05-08-2024
+Develop code,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-09-2024,05-29-2024
+Developer testing (primary debugging),Project Manager,None,None,None,None,Low,,SAP-154,Story,05-14-2024,06-04-2024
+Develop unit test plans using product specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-09-2024
+Develop integration test plans using product specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-09-2024
+Unit Testing,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-04-2024,06-25-2024
+Review modular code,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-04-2024,06-11-2024
+Test component modules to product specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-11-2024,06-13-2024
+Identify anomalies to product specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-13-2024,06-18-2024
+Modify code,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-18-2024,06-21-2024
+Re-test modified code,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-21-2024,06-25-2024
+Test module integration,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-25-2024,07-02-2024
+Identify anomalies to specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-02-2024,07-04-2024
+Modify code,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-04-2024,07-09-2024
+Re-test modified code,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-09-2024,07-11-2024
+Develop training specifications for end users,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-08-2024
+Develop training specifications for helpdesk support staff,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-08-2024
+"Identify training delivery methodology (computer based training, classroom, etc.)",Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-07-2024
+Develop training materials,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-04-2024,06-25-2024
+Conduct training usability study,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-25-2024,07-01-2024
+Finalize training materials,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-01-2024,07-04-2024
+Develop training delivery mechanism,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-04-2024,07-08-2024
+Develop Help specification,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-06-2024
+Develop Help system,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-20-2024,06-10-2024
+Review Help documentation,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-10-2024,06-13-2024
+Incorporate Help documentation feedback,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-13-2024,06-17-2024
+Develop user manuals specifications,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-06-2024,05-07-2024
+Develop user manuals,Project Manager,None,None,None,None,Low,,SAP-154,Story,05-20-2024,06-10-2024
+Review all user documentation,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-10-2024,06-12-2024
+Incorporate user documentation feedback,Project Manager,None,None,None,None,Low,,SAP-154,Story,06-12-2024,06-14-2024
+Identify test group,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-15-2024,04-16-2024
+Develop software delivery mechanism,Project Manager,None,None,None,None,Low,,SAP-154,Story,04-16-2024,04-17-2024
+Install/deploy software,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-11-2024,07-12-2024
+Obtain user feedback,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-12-2024,07-19-2024
+Evaluate testing information,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-19-2024,07-22-2024
+Determine final deployment strategy,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-22-2024,07-23-2024
+Develop deployment methodology,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-23-2024,07-24-2024
+Secure deployment resources,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-24-2024,07-25-2024
+Train support staff,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-25-2024,07-26-2024
+Deploy software,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-26-2024,07-29-2024
+Document lessons learned,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-29-2024,07-30-2024
+Distribute to team members,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-30-2024,07-31-2024
+Create software maintenance team,Project Manager,None,None,None,None,Low,,SAP-154,Story,07-31-2024,08-01-2024
+Software development template complete,Project Manager,None,None,None,None,Low,,SAP-154,Story,08-01-2024,08-01-2024
