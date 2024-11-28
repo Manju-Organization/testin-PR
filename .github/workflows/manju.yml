@@ -17,8 +17,8 @@ jobs:
     # Step 2: Set up Git configuration
     - name: Set up Git configuration
       run: |
-        git config --global user.name "manjushrikrishna"
-        git config --global user.email "manjushrik@devtools.in"
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
     # Step 3: Get open PRs for the repository using GitHub API
     - name: List Open PRs
