@@ -5,27 +5,25 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write  # Grants write access to repository contents
+  pull-requests: write  # Grants write access to pull requests
+
 jobs:
   generate-pr-csv:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository to the workflow
+    # Step 1: Checkout the repository
     - name: Checkout the repository
       uses: actions/checkout@v3
 
-    # Step 2: Set up Git configuration
-    - name: Set up Git configuration
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-    # Step 3: Get open PRs for the repository using GitHub API
+    # Step 2: Get open PRs for the repository using GitHub API
     - name: List Open PRs
       id: list_prs
       run: |
         # Get open PRs for the repository and branch
-        response=$(curl -s -H "Authorization: token ${{ secrets.TOKEN }}" \
+        response=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&base=main")
         
         # Create CSV file and write headers
@@ -34,7 +32,7 @@ jobs:
         # Extract PR details and append to CSV
         echo "$response" | jq -r '.[] | [.number, .title, .user.login, .created_at, .html_url] | @csv' >> prs.csv
 
-    # Step 4: Move CSV file to main branch
+    # Step 3: Move CSV file to main branch
     - name: Move CSV file to main branch
       run: |
         # Checkout the main branch
@@ -43,12 +41,12 @@ jobs:
         # Create a new branch for the commit (optional but safer)
         git checkout -b update-pr-csv
 
-        # Move the CSV file to main branch (already generated in the previous step)
+        # Move the CSV file to the main branch (already generated in the previous step)
         git add prs.csv
         git commit -m "Add open PRs list CSV"
         git push origin update-pr-csv
 
-    # Step 5: Create a pull request to merge the changes to the main branch
+    # Step 4: Create a Pull Request
     - name: Create a Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
