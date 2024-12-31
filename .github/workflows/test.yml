@@ -1,105 +1,27 @@
-name: List All Branches by Status for a Specific Repository
+name: SharePoint Upload on Push
 
 on:
-  workflow_dispatch:
-    inputs:
-      repository:
-        description: 'Repository name within the organization'
-        required: true
-        default: 'testin-PR'  # Replace with the name of the specific repository
+  push:
+    branches:
+      - main # Change to your branch if different
 
 jobs:
-  list-branches:
+  upload-to-sharepoint:
     runs-on: ubuntu-latest
+    name: Upload File to SharePoint
     steps:
-      - name: Set up environment and dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq openssl
+      - name: Checkout repository
+        uses: actions/checkout@v2.3.4
 
-      - name: List all branches
-        env:
-          ORG: Manju-Organization  # Replace with your organization name
-          REPO: ${{ github.event.inputs.repository }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          APP_ID: ${{ secrets.APP_ID }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
-          OUTPUT_FILE: branches_list.csv
-          DAYS_STALE: 90  # Number of days to consider a branch stale
-        run: |
-          # Generate JWT for GitHub App
-          IAT=$(date +%s)
-          EXP=$((IAT + 600))  # Token valid for 10 minutes
-          HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
-          PAYLOAD=$(echo -n "{\"iat\":$IAT,\"exp\":$EXP,\"iss\":$APP_ID}" | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
-          SIGNATURE=$(echo -n "$HEADER.$PAYLOAD" | openssl dgst -sha256 -sign <(printf '%s' "$PRIVATE_KEY") -binary | base64 | tr -d '\n' | tr '/+' '_-' | tr -d '=')
-          JWT="$HEADER.$PAYLOAD.$SIGNATURE"
+      - name: Create a test file
+        run: echo "test" > test.txt
 
-          # Authenticate as GitHub App and get installation ID
-          INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/orgs/$ORG/installations" | jq -r '.installations[0].id')
-
-          if [ -z "$INSTALLATION_ID" ] || [ "$INSTALLATION_ID" == "null" ]; then
-            echo "Error: Unable to fetch installation ID for organization $ORG"
-            exit 1
-          fi
-
-          # Generate installation access token
-          INSTALLATION_TOKEN=$(curl -s -X POST -H "Authorization: Bearer $JWT" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r '.token')
-
-          if [ -z "$INSTALLATION_TOKEN" ] || [ "$INSTALLATION_TOKEN" == "null" ]; then
-            echo "Error: Unable to fetch installation token for installation ID $INSTALLATION_ID"
-            exit 1
-          fi
-
-          # Initialize CSV file
-          echo "Repository,Branch,Last Commit Date,Status" > $OUTPUT_FILE
-
-          # Set branch pagination variables
-          BRANCH_PAGE=1
-          BRANCH_PER_PAGE=100
-
-          # Fetch branches for the specified repository
-          while :; do
-            BRANCHES=$(curl -s -H "Authorization: token $INSTALLATION_TOKEN" \
-              "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
-
-            # Break if no more branches are found
-            [ "$(echo "$BRANCHES" | jq '. | length')" -eq 0 ] && break
-
-            # Process each branch
-            echo "$BRANCHES" | jq -r '.[].name' | while read -r BRANCH_NAME; do
-              LAST_COMMIT_DATE=$(curl -s -H "Authorization: token $INSTALLATION_TOKEN" \
-                "https://api.github.com/repos/$ORG/$REPO/commits/$BRANCH_NAME" | jq -r '.commit.committer.date')
-
-              if [ -z "$LAST_COMMIT_DATE" ] || [ "$LAST_COMMIT_DATE" == "null" ]; then
-                echo "Error fetching commit details for branch $BRANCH_NAME"
-                continue
-              fi
-
-              LAST_COMMIT_SECONDS=$(date -d "$LAST_COMMIT_DATE" +%s)
-              TODAY=$(date +%s)
-              DIFF_DAYS=$(( (TODAY - LAST_COMMIT_SECONDS) / 86400 ))
-
-              # Determine if the branch is stale or active
-              if [ $DIFF_DAYS -ge $DAYS_STALE ]; then
-                STATUS="Stale"
-              else
-                STATUS="Active"
-              fi
-
-              # Add entry to CSV
-              echo "$REPO,$BRANCH_NAME,$LAST_COMMIT_DATE,$STATUS" >> $OUTPUT_FILE
-            done
-
-            # Increment branch page for the next batch
-            BRANCH_PAGE=$((BRANCH_PAGE + 1))
-          done
-
-      - name: Upload CSV file
-        uses: actions/upload-artifact@v3
+      - name: Upload to SharePoint
+        uses: su-dont/share-point-uploader@v2.1
         with:
-          name: branches_list.csv
-          path: branches_list.csv
+          sp_url: https://devtoolsin.sharepoint.com/sites/devtools2    # Replace with your SharePoint URL
+          sp_username: manjushrik@devtools.in             # Replace with your SharePoint username
+          sp_password: ${{ secrets.PASSWORD }}             # Set the password in GitHub Secrets
+          sp_folder: /Shared Documents/test             # Replace with the SharePoint folder path
+          sp_file_name: share_point_text.txt               # Name of the file on SharePoint
+          file: test.txt                                   # Local file to upload
