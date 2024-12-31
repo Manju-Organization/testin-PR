@@ -1,27 +1,23 @@
-name: SharePoint Upload on Push
+name: Upload to SharePoint
 
 on:
   push:
     branches:
-      - main # Change to your branch if different
+      - main
 
 jobs:
   upload-to-sharepoint:
     runs-on: ubuntu-latest
-    name: Upload File to SharePoint
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2.3.4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Create a test file
-        run: echo "test" > test.txt
-
-      - name: Upload to SharePoint
-        uses: su-dont/share-point-uploader@v2.1
+      - name: Upload file to SharePoint
+        uses: sjultra/Push2Sharepoint@v3.4
         with:
-          sp_url: https://devtoolsin.sharepoint.com/sites/devtools2    # Replace with your SharePoint URL
-          sp_username: manjushrik@devtools.in             # Replace with your SharePoint username
-          sp_password: ${{ secrets.PASSWORD }}             # Set the password in GitHub Secrets
-          sp_folder: /Shared Documents/test             # Replace with the SharePoint folder path
-          sp_file_name: share_point_text.txt               # Name of the file on SharePoint
-          file: test.txt                                   # Local file to upload
+          username: ${{ secrets.SHAREPOINT_USERNAME }}
+          password: ${{ secrets.SHAREPOINT_PASSWORD }}
+          file_name: './test.txt'
+          full_url: 'https://devtoolsin.sharepoint.com/sites/devtools2'
+          target_subfolder: 'Shared Documents/test'
