@@ -1,0 +1,17 @@
+name: Count Lines of Code
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  count-lines:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Count lines in Java files
+        run: |
+          find . -name "*.java" | xargs wc -l
