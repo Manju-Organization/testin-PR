@@ -1,4 +1,4 @@
-name: Count Lines of Code
+name: Count Lines of Code from Another Repo
 
 on:
   push:
@@ -8,10 +8,17 @@ on:
 jobs:
   count-lines:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout current repo code
         uses: actions/checkout@v3
 
-      - name: Count lines in Java files
+      - name: Fetch Java files from the other repo
+        uses: actions/checkout@v3
+        with:
+          repository: Manju-Organization/memo2 # Replace with the target repository name
+          token: ${{ secrets.TEST }}  # Use GitHub token to authenticate
+
+      - name: Count lines in all Java files from the target repo
         run: |
           find . -name "*.java" | xargs wc -l
