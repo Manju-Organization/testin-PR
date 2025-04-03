@@ -1,24 +1,20 @@
-name: Count Lines of Code from Another Repo
+name: Count Lines of Code
 
 on:
   push:
-    branches:
-      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  count-lines:
+  count-loc:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout current repo code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Fetch Java files from the other repo
-        uses: actions/checkout@v3
-        with:
-          repository: Manju-Organization/memo2 # Replace with the target repository name
-          token: ${{ secrets.TEST }}  # Use GitHub token to authenticate
+    - name: Install cloc
+      run: sudo apt-get install -y cloc
 
-      - name: Count lines in all Java files from the target repo
-        run: |
-          find . -name "*.java" | xargs wc -l
+    - name: Count lines of code
+      run: cloc .
