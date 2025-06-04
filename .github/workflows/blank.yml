@@ -3,7 +3,7 @@ name: PR and List Open PRs
 on:
   push:
     branches:
-      - test
+      - test2
 
 jobs:
   check-or-create-pr:
@@ -17,7 +17,7 @@ jobs:
       - name: Set environment variables
         run: |
           echo "GITHUB_REPOSITORY=${{ github.repository }}" >> $GITHUB_ENV
-          echo "TEST_BRANCH=test" >> $GITHUB_ENV
+          echo "TEST_BRANCH=test2" >> $GITHUB_ENV
           echo "DEV_BRANCH=main" >> $GITHUB_ENV
 
       - name: Check if PR exists from test to dev
@@ -52,7 +52,7 @@ jobs:
             -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            -d '{"title": "PR from test to main", "head": "'"$TEST_BRANCH"'", "base": "'"$DEV_BRANCH"'", "body": "Automatically created PR"}' \
+            -d '{"title": "PR from test2 to main", "head": "'"$TEST_BRANCH"'", "base": "'"$DEV_BRANCH"'", "body": "Automatically created PR"}' \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls"
 
  
