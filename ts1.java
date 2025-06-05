@@ -23,3 +23,7 @@ public class MultiplicationTable {
 }
 gfbnsxc 
     fg
+    \
+
+
+    fchj
