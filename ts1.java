@@ -21,3 +21,9 @@ public class MultiplicationTable {
         scanner.close();
     }
 }
+gfbnsxc 
+    fg
+    \
+
+
+    fchj
