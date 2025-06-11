@@ -1,96 +1,35 @@
-name: List All Branches by Status for a Specific Repository
+name: Last Commit Info
 
 on:
-  workflow_dispatch:
-    inputs:
-      repository:
-        description: 'Repository name within the organization'
-        required: true
-        default: 'testin-PR'  # Replace with the name of the specific repository
+  push:
+    branches:
+      - test2
 
 jobs:
-  list-branches:
+  generate-last-commit-info:
+    name: Generate Last Commit Info
     runs-on: ubuntu-latest
+
     steps:
-      - name: Set up environment and dependencies
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get last commit info and write to YAML
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          author=$(git log -1 --pretty=format:'%an')
+          committer=$(git log -1 --pretty=format:'%cn')
+          date=$(git log -1 --pretty=format:'%cd' --date=iso)
+          hash=$(git log -1 --pretty=format:'%H')
 
-      - name: Checkout the repository
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ github.event.inputs.repository }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          mkdir -p output
 
-      - name: List all branches
-        env:
-          ORG: Manju-Organization  # Replace with your organization name
-          REPO: ${{ github.event.inputs.repository }}
-          OUTPUT_FILE: branches_list.csv
-          DAYS_STALE: 90  # Number of days to consider a branch stale
-        run: |
-          # Initialize CSV file
-          echo "Repository,Branch,Last Commit Date,Status" > $OUTPUT_FILE
+          cat <<EOF > output/last_commit.yml
+last_commit:
+  author: "$author"
+  committer: "$committer"
+  date: "$date"
+  commit_hash: "$hash"
+EOF
 
-          # Set branch pagination variables
-          BRANCH_PAGE=1
-          BRANCH_PER_PAGE=100
-
-          # Fetch branches for the specified repository using GITHUB_TOKEN
-          while :; do
-            BRANCHES=$(curl -s -H "Authorization: token ${{ secrets.TOKEN }}" \
-              "https://api.github.com/repos/$ORG/$REPO/branches?per_page=$BRANCH_PER_PAGE&page=$BRANCH_PAGE")
-
-            # Break if no more branches are found
-            [ "$(echo "$BRANCHES" | jq '. | length')" -eq 0 ] && break
-
-            # Process each branch
-            echo "$BRANCHES" | jq -r '.[].name' | while read -r BRANCH_NAME; do
-              LAST_COMMIT_DATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                "https://api.github.com/repos/$ORG/$REPO/commits/$BRANCH_NAME" | jq -r '.commit.committer.date')
-
-              if [ -z "$LAST_COMMIT_DATE" ] || [ "$LAST_COMMIT_DATE" == "null" ]; then
-                echo "Error fetching commit details for branch $BRANCH_NAME"
-                continue
-              fi
-
-              LAST_COMMIT_SECONDS=$(date -d "$LAST_COMMIT_DATE" +%s)
-              TODAY=$(date +%s)
-              DIFF_DAYS=$(( (TODAY - LAST_COMMIT_SECONDS) / 86400 ))
-
-              # Determine if the branch is stale or active
-              if [ $DIFF_DAYS -ge $DAYS_STALE ]; then
-                STATUS="Stale"
-              else
-                STATUS="Active"
-              fi
-
-              # Add entry to CSV
-              echo "$REPO,$BRANCH_NAME,$LAST_COMMIT_DATE,$STATUS" >> $OUTPUT_FILE
-            done
-
-            # Increment branch page for the next batch
-            BRANCH_PAGE=$((BRANCH_PAGE + 1))
-          done
-
-      - name: Commit CSV to main branch
-        run: |
-          # Checkout the main branch
-          git checkout main
-
-          # Create a new branch for the commit (optional but safer)
-          git checkout -b update-branches-csv
-
-          # Add the CSV file to the repository
-          git add branches_list.csv
-          git commit -m "Add branch status CSV file"
-          git push origin update-branches-csv
-
-      - name: Create a Pull Request to merge CSV into main branch
-        uses: peter-evans/create-pull-request@v3
-        with:
-          title: "Add Branches List CSV"
-          body: "This pull request adds a CSV file with the list of branches and their statuses."
-          base: main
-          head: update-branches-csv
+      - name: Show output file
+        run: cat output/last_commit.yml
